@@ -1,0 +1,88 @@
+package client;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Arrays;
+import java.util.Scanner;
+
+public class ClientMT {
+    private static Socket socket;
+	public static void main(String[] args) throws IOException {
+		String ipServer="";
+		int port=0;
+		//------ Validation de l'adresse ip et du numero du port ------
+		Scanner myObj = new Scanner(System.in);  // Create a Scanner object
+	    boolean isValid = false;
+		while(!isValid) {
+		    isValid = true;
+		    System.out.print("Entez l'adresse IP du serveur au format xxx.xxx.xxx.xxx : ");    
+		    ipServer = myObj.nextLine();
+		    int[] nbres  = Arrays.stream(ipServer.split("\\."))
+		        		    .mapToInt(Integer::parseInt)
+		        		    .toArray();
+		    for(int i=0;i<nbres.length;i++) {	
+		        if(nbres[i]<0 || nbres[i]>255) {
+		        	 System.out.println("Adresse Ip invalid reessayer ....");
+		        	  isValid = false;
+		        	  break;
+		        }
+			}        
+		}
+		isValid = false;
+		while(!isValid) {
+			System.out.print("Entez le numero du port : ");
+			port = myObj.nextInt();
+			if(port<5000 || port>5050) {
+				System.out.println("Numero du port doit etre compris entre 5000 et 5050 ..."); 
+			}else {
+				isValid =true; 
+			}
+		}		
+		socket = new Socket(ipServer,port);
+		DataInputStream in = new DataInputStream(socket.getInputStream());
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		int cmptMessage = 0;
+		while(cmptMessage<8) {
+			System.out.println(in.readUTF());
+			cmptMessage++;
+		}
+		String cmd = "";
+		while(!cmd.equals("exit")) {
+			while((cmd = myObj.nextLine()).equals("")) {}
+			cmd = myObj.nextLine();
+			
+			System.out.println("commande saisi au niveau client : "+cmd);
+			String subCmd = cmd.substring(0,cmd.indexOf(" "));
+			out.writeUTF(cmd);
+			switch (subCmd) {
+			case "cd":
+				System.out.println("votre commande inside client : "+cmd);
+				break;
+			case "ls" :
+				System.out.println("votre commande inside client : "+cmd);
+				break;
+				
+			case "mkdir":
+				System.out.println("votre commande client : "+cmd);
+				break;
+			case "upload":
+				System.out.println("votre commande inside client : "+cmd);
+				break;
+			case "download":
+				byte []b=new byte[4096];
+				FileOutputStream fos = new FileOutputStream("toto.rtf");
+				in.read(b, 0, b.length);
+				fos.write(b, 0, b.length);
+				break;
+			default:
+				out.writeUTF("Commande incorrect !!!");
+				break;
+			}
+		}
+	}
+	    
+}
